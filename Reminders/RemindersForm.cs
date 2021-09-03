@@ -15,25 +15,39 @@ namespace Reminders
         public List<TextBox> setDates;
         public List<TextBox> dueDates;
         public List<CheckBox> completeds;
+        public int cNumPages; //Max num pages for completed tasks
+        public int cCurrentPageNum; //Current page num for completed tasks
+        public int ncNumPages; //Max num pages for non-completed tasks
+        public int ncCurrentPageNum; //Current page num for non-completed tasks
 
         //Constructor
         public RemindersForm()
         {
             InitializeComponent();
+            //Initialise variables
             reminders = new List<Reminder>();
             reminderTexts = new List<TextBox>();
             setDates = new List<TextBox>();
             dueDates = new List<TextBox>();
             completeds = new List<CheckBox>();
-            //TEST
-            //Date tempSetDate = new Date(1, 1, 2021);
-            //Date tempDueDate = new Date(2, 3, 2023);
-            //Reminder tempRem = new Reminder(false, "test", tempDueDate, tempSetDate);
-            //reminders.Add(tempRem);
-            //END TEST
+            cNumPages = 0;
+            cCurrentPageNum = 1;
+            ncNumPages = 0;
+            ncCurrentPageNum = 1;
+            //Run startup functions
             hideFieldsShowCreateButtonClearFieldsNoParam();
             readReminders();
+            calculateNumPages();
             displayReminders(cbToggleDone.Checked);
+            //Handle buttons and text
+            btnPageDown.Enabled = false;
+            tbPageNum.Text = cCurrentPageNum.ToString();
+            if (ncCurrentPageNum == ncNumPages)
+            {
+                btnPageUp.Enabled = false;
+            }
+            //Set icon
+            Icon = new Icon("bell_icon.ico");
         }
 
         //Method to read reminders from a file
@@ -183,88 +197,121 @@ namespace Reminders
             completeds = new List<CheckBox>();
             //Add new controls
             int numShown = -1; //Used to index reminderTexts
+            int foundCount = 0; //Used to count how many looped so that page can be displayed
+            int minIndexShown; //Used to compare to only show allowed reminders
+            int maxIndexShown; //Used to compare to only show allowed reminders
+            //Calculate bounds to display
+            if (onlyCompleted)
+            {
+                minIndexShown = (cCurrentPageNum - 1) * 30;
+                maxIndexShown = cCurrentPageNum * 30;
+            }
+            else
+            {
+                minIndexShown = (ncCurrentPageNum - 1) * 30;
+                maxIndexShown = ncCurrentPageNum * 30;
+            }
+            //Loop through reminders, show required
             for (int i = 0; i < reminders.Count; i++)
             {
                 if (onlyCompleted)
                 {
                     if (reminders[i].GetCompleted())
                     {
-                        //ReminderTexts
-                        reminderTexts.Add(new TextBox());
-                        numShown++;
-                        reminderTexts[numShown].Text = reminders[i].GetText();
-                        reminderTexts[numShown].Size = new Size(417, 20);
-                        reminderTexts[numShown].Location = new Point(15, (58 + (numShown * 25)));
-                        reminderTexts[numShown].ReadOnly = true;
-                        //SetDates
-                        setDates.Add(new TextBox());
-                        string tempSetDate = $"{reminders[i].GetSetDate().GetYear()}-{reminders[i].GetSetDate().GetMonth()}-{reminders[i].GetSetDate().GetDay()}";
-                        setDates[numShown].Text = tempSetDate;
-                        setDates[numShown].Size = new Size(106, 20);
-                        setDates[numShown].Location = new Point(458, (58 + (numShown * 25)));
-                        setDates[numShown].ReadOnly = true;
-                        //DueDates
-                        dueDates.Add(new TextBox());
-                        string tempDueDate = $"{reminders[i].GetDueDate().GetYear()}-{reminders[i].GetDueDate().GetMonth()}-{reminders[i].GetDueDate().GetDay()}";
-                        dueDates[numShown].Text = tempDueDate;
-                        dueDates[numShown].Size = new Size(97, 20);
-                        dueDates[numShown].Location = new Point(578, (58 + (numShown * 25)));
-                        dueDates[numShown].ReadOnly = true;
-                        //Completeds
-                        completeds.Add(new CheckBox());
-                        completeds[numShown].Text = "";
-                        if (reminders[i].GetCompleted())
+                        //If valid reminder (completed), increment
+                        foundCount++;
+                        //If index is within bounds, display
+                        if (foundCount > minIndexShown && foundCount <= maxIndexShown)
                         {
-                            completeds[numShown].Checked = true;
+                            //ReminderTexts
+                            reminderTexts.Add(new TextBox());
+                            numShown++;
+                            reminderTexts[numShown].Text = reminders[i].GetText();
+                            reminderTexts[numShown].Size = new Size(417, 20);
+                            reminderTexts[numShown].Location = new Point(15, (58 + (numShown * 25)));
+                            reminderTexts[numShown].ReadOnly = true;
+                            reminderTexts[numShown].TabStop = false;
+                            //SetDates
+                            setDates.Add(new TextBox());
+                            string tempSetDate = $"{reminders[i].GetSetDate().GetYear()}-{reminders[i].GetSetDate().GetMonth()}-{reminders[i].GetSetDate().GetDay()}";
+                            setDates[numShown].Text = tempSetDate;
+                            setDates[numShown].Size = new Size(106, 20);
+                            setDates[numShown].Location = new Point(458, (58 + (numShown * 25)));
+                            setDates[numShown].ReadOnly = true;
+                            setDates[numShown].TabStop = false;
+                            //DueDates
+                            dueDates.Add(new TextBox());
+                            string tempDueDate = $"{reminders[i].GetDueDate().GetYear()}-{reminders[i].GetDueDate().GetMonth()}-{reminders[i].GetDueDate().GetDay()}";
+                            dueDates[numShown].Text = tempDueDate;
+                            dueDates[numShown].Size = new Size(97, 20);
+                            dueDates[numShown].Location = new Point(578, (58 + (numShown * 25)));
+                            dueDates[numShown].ReadOnly = true;
+                            dueDates[numShown].TabStop = false;
+                            //Completeds
+                            completeds.Add(new CheckBox());
+                            completeds[numShown].Text = "";
+                            if (reminders[i].GetCompleted())
+                            {
+                                completeds[numShown].Checked = true;
+                            }
+                            else
+                            {
+                                completeds[numShown].Checked = false;
+                            }
+                            completeds[numShown].Location = new Point(689, (57 + (numShown * 25)));
+                            completeds[numShown].Name = i.ToString();
+                            completeds[numShown].Click += new EventHandler(toggleCompleted);
                         }
-                        else
-                        {
-                            completeds[numShown].Checked = false;
-                        }
-                        completeds[numShown].Location = new Point(689, (57 + (numShown * 25)));
-                        completeds[numShown].Name = i.ToString();
-                        completeds[numShown].Click += new EventHandler(toggleCompleted);
                     }
                 }
                 else
                 {
                     if (!reminders[i].GetCompleted())
                     {
-                        //ReminderTexts
-                        reminderTexts.Add(new TextBox());
-                        numShown++;
-                        reminderTexts[numShown].Text = reminders[i].GetText();
-                        reminderTexts[numShown].Size = new Size(417, 20);
-                        reminderTexts[numShown].Location = new Point(15, (58 + (numShown * 25)));
-                        reminderTexts[numShown].ReadOnly = true;
-                        //SetDates
-                        setDates.Add(new TextBox());
-                        string tempSetDate = $"{reminders[i].GetSetDate().GetYear()}-{reminders[i].GetSetDate().GetMonth()}-{reminders[i].GetSetDate().GetDay()}";
-                        setDates[numShown].Text = tempSetDate;
-                        setDates[numShown].Size = new Size(106, 20);
-                        setDates[numShown].Location = new Point(458, (58 + (numShown * 25)));
-                        setDates[numShown].ReadOnly = true;
-                        //DueDates
-                        dueDates.Add(new TextBox());
-                        string tempDueDate = $"{reminders[i].GetDueDate().GetYear()}-{reminders[i].GetDueDate().GetMonth()}-{reminders[i].GetDueDate().GetDay()}";
-                        dueDates[numShown].Text = tempDueDate;
-                        dueDates[numShown].Size = new Size(97, 20);
-                        dueDates[numShown].Location = new Point(578, (58 + (numShown * 25)));
-                        dueDates[numShown].ReadOnly = true;
-                        //Completeds
-                        completeds.Add(new CheckBox());
-                        completeds[numShown].Text = "";
-                        if (reminders[i].GetCompleted())
+                        //If valid reminder (non-completed), increment
+                        foundCount++;
+                        //If index is within bounds, display
+                        if (foundCount > minIndexShown && foundCount <= maxIndexShown)
                         {
-                            completeds[numShown].Checked = true;
+                            //ReminderTexts
+                            reminderTexts.Add(new TextBox());
+                            numShown++;
+                            reminderTexts[numShown].Text = reminders[i].GetText();
+                            reminderTexts[numShown].Size = new Size(417, 20);
+                            reminderTexts[numShown].Location = new Point(15, (58 + (numShown * 25)));
+                            reminderTexts[numShown].ReadOnly = true;
+                            reminderTexts[numShown].TabStop = false;
+                            //SetDates
+                            setDates.Add(new TextBox());
+                            string tempSetDate = $"{reminders[i].GetSetDate().GetYear()}-{reminders[i].GetSetDate().GetMonth()}-{reminders[i].GetSetDate().GetDay()}";
+                            setDates[numShown].Text = tempSetDate;
+                            setDates[numShown].Size = new Size(106, 20);
+                            setDates[numShown].Location = new Point(458, (58 + (numShown * 25)));
+                            setDates[numShown].ReadOnly = true;
+                            setDates[numShown].TabStop = false;
+                            //DueDates
+                            dueDates.Add(new TextBox());
+                            string tempDueDate = $"{reminders[i].GetDueDate().GetYear()}-{reminders[i].GetDueDate().GetMonth()}-{reminders[i].GetDueDate().GetDay()}";
+                            dueDates[numShown].Text = tempDueDate;
+                            dueDates[numShown].Size = new Size(97, 20);
+                            dueDates[numShown].Location = new Point(578, (58 + (numShown * 25)));
+                            dueDates[numShown].ReadOnly = true;
+                            dueDates[numShown].TabStop = false;
+                            //Completeds
+                            completeds.Add(new CheckBox());
+                            completeds[numShown].Text = "";
+                            if (reminders[i].GetCompleted())
+                            {
+                                completeds[numShown].Checked = true;
+                            }
+                            else
+                            {
+                                completeds[numShown].Checked = false;
+                            }
+                            completeds[numShown].Location = new Point(689, (57 + (numShown * 25)));
+                            completeds[numShown].Name = i.ToString();
+                            completeds[numShown].Click += new EventHandler(toggleCompleted);
                         }
-                        else
-                        {
-                            completeds[numShown].Checked = false;
-                        }
-                        completeds[numShown].Location = new Point(689, (57 + (numShown * 25)));
-                        completeds[numShown].Name = i.ToString();
-                        completeds[numShown].Click += new EventHandler(toggleCompleted);
                     }
                 }
             }
@@ -285,6 +332,14 @@ namespace Reminders
         private void createReminder(object sender, EventArgs e)
         {
             addReminderFromInputs();
+            calculateNumPages();
+            if (!cbToggleDone.Checked)
+            {
+                if (ncCurrentPageNum < ncNumPages)
+                {
+                    btnPageUp.Enabled = true;
+                }
+            }
             displayReminders(cbToggleDone.Checked);
         }
 
@@ -335,13 +390,219 @@ namespace Reminders
             CheckBox ckbx = sender as CheckBox;
             //Set completed status of reminder - get status, set as inverse
             reminders[Convert.ToInt32(ckbx.Name)].SetCompleted(!reminders[Convert.ToInt32(ckbx.Name)].GetCompleted());
+            calculateNumPages();
+            //Handle page num stuff
+            if (cbToggleDone.Checked)
+            {
+                //Checks for whether page numbers has reduced and user was on last page
+                if (cCurrentPageNum > cNumPages)
+                {
+                    cCurrentPageNum = cNumPages;
+                }
+                //Handles pageup button
+                if (cCurrentPageNum == cNumPages)
+                {
+                    btnPageUp.Enabled = false;
+                }
+                else
+                {
+                    btnPageUp.Enabled = true;
+                }
+                //Handles pagedown button
+                if (cCurrentPageNum == 1)
+                {
+                    btnPageDown.Enabled = false;
+                }
+                else
+                {
+                    btnPageDown.Enabled = true;
+                }
+                //Sets text
+                tbPageNum.Text = cCurrentPageNum.ToString();
+            }
+            else
+            {
+                //Checks for whether page numbers has reduced and user was on last page
+                if (ncCurrentPageNum > ncNumPages)
+                {
+                    ncCurrentPageNum = ncNumPages;
+                }
+                //Handles pageup button
+                if (ncCurrentPageNum == ncNumPages)
+                {
+                    btnPageUp.Enabled = false;
+                }
+                else
+                {
+                    btnPageUp.Enabled = true;
+                }
+                //Handles pagedown button
+                if (ncCurrentPageNum == 1)
+                {
+                    btnPageDown.Enabled = false;
+                }
+                else
+                {
+                    btnPageDown.Enabled = true;
+                }
+                //Sets text
+                tbPageNum.Text = ncCurrentPageNum.ToString();
+            }
+            //Display reminders
             displayReminders(cbToggleDone.Checked);
         }
 
         //Method to run when cbToggleDone is toggled
         private void toggleShowCompleted(object sender, EventArgs e)
         {
-            Console.WriteLine(cbToggleDone.Checked);
+            //Handle page num stuff
+            if (cbToggleDone.Checked)
+            {
+                cCurrentPageNum = 1;
+                if (cCurrentPageNum == cNumPages)
+                {
+                    btnPageUp.Enabled = false;
+                }
+                else
+                {
+                    btnPageUp.Enabled = true;
+                }
+                tbPageNum.Text = cCurrentPageNum.ToString();
+            }
+            else
+            {
+                ncCurrentPageNum = 1;
+                if (ncCurrentPageNum == ncNumPages)
+                {
+                    btnPageUp.Enabled = false;
+                }
+                else
+                {
+                    btnPageUp.Enabled = true;
+                }
+                tbPageNum.Text = ncCurrentPageNum.ToString();
+            }
+            btnPageDown.Enabled = false;
+            //Display reminders
+            displayReminders(cbToggleDone.Checked);
+        }
+
+        //Method to calculate number of pages
+        private void calculateNumPages()
+        {
+            //Declare and initialise variables
+            int nonComplete = 0;
+            int complete = 0;
+            //Iterate through reminder list and find number of completeds and non-completeds
+            for (int i = 0; i < reminders.Count; i++)
+            {
+                if (reminders[i].GetCompleted())
+                {
+                    complete++;
+                }
+                else
+                {
+                    nonComplete++;
+                }
+            }
+            //Calculate number of pages for each
+            cNumPages = Convert.ToInt32(Math.Ceiling(Convert.ToDecimal(complete / 30m)));
+            ncNumPages = Convert.ToInt32(Math.Ceiling(Convert.ToDecimal(nonComplete / 30m)));
+        }
+
+        //Method to go to page up
+        private void pageUp(object sender, EventArgs e)
+        {
+            //Handle case showing completed tasks
+            if (cbToggleDone.Checked)
+            {
+                cCurrentPageNum++;
+                //Handle increased page number
+                if (cCurrentPageNum == cNumPages)
+                {
+                    btnPageUp.Enabled = false;
+                }
+                else if (cCurrentPageNum > cNumPages)
+                {
+                    cCurrentPageNum = cNumPages;
+                }
+                //Reenable PageDown button if needed
+                if (!btnPageDown.Enabled)
+                {
+                    btnPageDown.Enabled = true;
+                }
+                //Set page number textbox
+                tbPageNum.Text = cCurrentPageNum.ToString();
+            }
+            //Handle case of non-completed tasks
+            else
+            {
+                ncCurrentPageNum++;
+                //Handle increased page number
+                if (ncCurrentPageNum == ncNumPages)
+                {
+                    btnPageUp.Enabled = false;
+                }
+                else if (ncCurrentPageNum > ncNumPages)
+                {
+                    ncCurrentPageNum = ncNumPages;
+                }
+                //Reenable PageDown button if needed
+                if (!btnPageDown.Enabled)
+                {
+                    btnPageDown.Enabled = true;
+                }
+                //Set page number textbox
+                tbPageNum.Text = ncCurrentPageNum.ToString();
+            }
+            displayReminders(cbToggleDone.Checked);
+        }
+
+        //Method to go to page down
+        private void pageDown(object sender, EventArgs e)
+        {
+            //Handle case showing completed tasks
+            if (cbToggleDone.Checked)
+            {
+                cCurrentPageNum--;
+                //Handle decreased page number
+                if (cCurrentPageNum == 1)
+                {
+                    btnPageDown.Enabled = false;
+                }
+                else if (cCurrentPageNum < 1)
+                {
+                    cCurrentPageNum = 1;
+                }
+                //Reenable PageUp button if needed
+                if (!btnPageUp.Enabled)
+                {
+                    btnPageUp.Enabled = true;
+                }
+                //Set page number textbox
+                tbPageNum.Text = cCurrentPageNum.ToString();
+            }
+            //Handle case of non-completed tasks
+            else
+            {
+                ncCurrentPageNum--;
+                //Handle increased page number
+                if (ncCurrentPageNum == 1)
+                {
+                    btnPageDown.Enabled = false;
+                }
+                else if (ncCurrentPageNum < 1)
+                {
+                    ncCurrentPageNum = 1;
+                }
+                //Reenable PageUp button if needed
+                if (!btnPageUp.Enabled)
+                {
+                    btnPageUp.Enabled = true;
+                }
+                //Set page number textbox
+                tbPageNum.Text = ncCurrentPageNum.ToString();
+            }
             displayReminders(cbToggleDone.Checked);
         }
     }
@@ -351,5 +612,5 @@ namespace Reminders
 //TODO - ADD PROPER CHECKING FOR IF DATE ENTERED IS VALID
 //TODO - ADD OPTIONAL TIME AND MAKE NOTIFS?
 //TODO - ADD PRIORITIES/SORT BY?
-//TODO - ADD LOGO
 //TODO - MAKE SCROLLING FOR WHEN TOO MANY REMINDERS (OR PAGE NUMS??)
+//"soe mommy" deleted from chat

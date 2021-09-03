@@ -43,6 +43,9 @@
             this.btnCancel = new System.Windows.Forms.Button();
             this.lblToggleDone = new System.Windows.Forms.Label();
             this.cbToggleDone = new System.Windows.Forms.CheckBox();
+            this.btnPageDown = new System.Windows.Forms.Button();
+            this.tbPageNum = new System.Windows.Forms.TextBox();
+            this.btnPageUp = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // tbNewReminder
@@ -181,11 +184,44 @@
             this.cbToggleDone.UseVisualStyleBackColor = true;
             this.cbToggleDone.CheckedChanged += new System.EventHandler(this.toggleShowCompleted);
             // 
+            // btnPageDown
+            // 
+            this.btnPageDown.Location = new System.Drawing.Point(15, 851);
+            this.btnPageDown.Name = "btnPageDown";
+            this.btnPageDown.Size = new System.Drawing.Size(31, 20);
+            this.btnPageDown.TabIndex = 17;
+            this.btnPageDown.Text = "<";
+            this.btnPageDown.UseVisualStyleBackColor = true;
+            this.btnPageDown.Click += new System.EventHandler(this.pageDown);
+            // 
+            // tbPageNum
+            // 
+            this.tbPageNum.Location = new System.Drawing.Point(52, 851);
+            this.tbPageNum.Name = "tbPageNum";
+            this.tbPageNum.ReadOnly = true;
+            this.tbPageNum.Size = new System.Drawing.Size(31, 20);
+            this.tbPageNum.TabIndex = 18;
+            this.tbPageNum.TabStop = false;
+            this.tbPageNum.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
+            // btnPageUp
+            // 
+            this.btnPageUp.Location = new System.Drawing.Point(89, 851);
+            this.btnPageUp.Name = "btnPageUp";
+            this.btnPageUp.Size = new System.Drawing.Size(31, 20);
+            this.btnPageUp.TabIndex = 19;
+            this.btnPageUp.Text = ">";
+            this.btnPageUp.UseVisualStyleBackColor = true;
+            this.btnPageUp.Click += new System.EventHandler(this.pageUp);
+            // 
             // RemindersForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1281, 843);
+            this.ClientSize = new System.Drawing.Size(1281, 886);
+            this.Controls.Add(this.btnPageUp);
+            this.Controls.Add(this.tbPageNum);
+            this.Controls.Add(this.btnPageDown);
             this.Controls.Add(this.cbToggleDone);
             this.Controls.Add(this.lblToggleDone);
             this.Controls.Add(this.btnCancel);
@@ -226,6 +262,9 @@
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Label lblToggleDone;
         private System.Windows.Forms.CheckBox cbToggleDone;
+        private System.Windows.Forms.Button btnPageDown;
+        private System.Windows.Forms.TextBox tbPageNum;
+        private System.Windows.Forms.Button btnPageUp;
     }
 }
 
